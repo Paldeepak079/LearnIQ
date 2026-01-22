@@ -568,7 +568,7 @@ def show_class_overview(df, personas):
                 font_size=14,
                 font_family="Arial"
             ),
-            transition_duration=500  # Smooth animation
+            transition_duration=800  # Smoother animation
         )
         st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
     
@@ -609,7 +609,7 @@ def show_class_overview(df, personas):
                 gridcolor='rgba(102, 126, 234, 0.1)',
                 color='#e0e0e0'
             ),
-            transition_duration=500  # Smooth animation
+            transition_duration=800  # Smoother animation
         )
         st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
     

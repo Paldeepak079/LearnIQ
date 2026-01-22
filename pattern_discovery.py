@@ -17,8 +17,6 @@ import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, davies_bouldin_score
-import matplotlib.pyplot as plt
-import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -65,33 +63,6 @@ def determine_optimal_clusters(X, k_range=range(2, 9), show_plot=True):
     
     print(f"\n✓ Optimal clusters: k={optimal_k}")
     print(f"  Silhouette Score: {max(silhouette_scores):.3f}")
-    
-    # Visualization
-    if show_plot:
-        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-        
-        # Elbow plot
-        axes[0].plot(list(k_range), inertias, 'bo-', linewidth=2, markersize=8)
-        axes[0].set_xlabel('Number of Clusters (k)', fontsize=12)
-        axes[0].set_ylabel('Inertia (Within-Cluster Sum of Squares)', fontsize=12)
-        axes[0].set_title('Elbow Method', fontsize=14, fontweight='bold')
-        axes[0].grid(True, alpha=0.3)
-        axes[0].axvline(optimal_k, color='red', linestyle='--', label=f'Optimal k={optimal_k}')
-        axes[0].legend()
-        
-        # Silhouette plot
-        axes[1].plot(list(k_range), silhouette_scores, 'go-', linewidth=2, markersize=8)
-        axes[1].set_xlabel('Number of Clusters (k)', fontsize=12)
-        axes[1].set_ylabel('Silhouette Score', fontsize=12)
-        axes[1].set_title('Silhouette Analysis', fontsize=14, fontweight='bold')
-        axes[1].grid(True, alpha=0.3)
-        axes[1].axvline(optimal_k, color='red', linestyle='--', label=f'Optimal k={optimal_k}')
-        axes[1].legend()
-        
-        plt.tight_layout()
-        plt.savefig('cluster_optimization.png', dpi=150, bbox_inches='tight')
-        print("\n✓ Saved diagnostics: cluster_optimization.png")
-        plt.close()
     
     metrics = {
         'k_values': list(k_range),
@@ -246,80 +217,9 @@ def assign_personas(df, labels, feature_names):
 
 def visualize_clusters(df, labels, personas, feature_names):
     """
-    Create visualizations of cluster patterns.
-    
-    Visualizations:
-    1. Cluster distribution pie chart
-    2. Feature comparison radar/bar charts
-    3. 2D cluster scatter plot (using PCA if needed)
-    
-    Args:
-        df (pd.DataFrame): Student data with features
-        labels (np.array): Cluster assignments
-        personas (dict): Cluster ID to persona name mapping
-        feature_names (list): Features used for clustering
+    Skipping static Matplotlib visualization as we use interactive Plotly in app.py.
     """
-    df_viz = df.copy()
-    df_viz['cluster'] = labels
-    df_viz['persona'] = df_viz['cluster'].map(personas)
-    
-    # Create comprehensive visualization
-    fig = plt.figure(figsize=(16, 10))
-    
-    # 1. Cluster Distribution Pie Chart
-    ax1 = plt.subplot(2, 3, 1)
-    cluster_counts = df_viz['persona'].value_counts()
-    colors = sns.color_palette('Set2', n_colors=len(cluster_counts))
-    ax1.pie(cluster_counts.values, labels=cluster_counts.index, autopct='%1.1f%%',
-            colors=colors, startangle=90)
-    ax1.set_title('Learning Pattern Distribution', fontsize=14, fontweight='bold')
-    
-    # 2. Engagement Score by Cluster
-    ax2 = plt.subplot(2, 3, 2)
-    sns.boxplot(data=df_viz, x='persona', y='engagement_score', palette='Set2', ax=ax2)
-    ax2.set_title('Engagement by Pattern', fontsize=12, fontweight='bold')
-    ax2.set_xlabel('')
-    ax2.set_ylabel('Engagement Score')
-    ax2.tick_params(axis='x', rotation=45)
-    
-    # 3. Consistency by Cluster
-    ax3 = plt.subplot(2, 3, 3)
-    sns.boxplot(data=df_viz, x='persona', y='consistency_index', palette='Set2', ax=ax3)
-    ax3.set_title('Consistency by Pattern', fontsize=12, fontweight='bold')
-    ax3.set_xlabel('')
-    ax3.set_ylabel('Consistency Index')
-    ax3.tick_params(axis='x', rotation=45)
-    
-    # 4. Performance Trend by Cluster
-    ax4 = plt.subplot(2, 3, 4)
-    sns.boxplot(data=df_viz, x='persona', y='performance_trend', palette='Set2', ax=ax4)
-    ax4.set_title('Performance Trend by Pattern', fontsize=12, fontweight='bold')
-    ax4.set_xlabel('')
-    ax4.set_ylabel('Trend')
-    ax4.axhline(0, color='red', linestyle='--', alpha=0.5, linewidth=1)
-    ax4.tick_params(axis='x', rotation=45)
-    
-    # 5. Average Grades by Cluster
-    ax5 = plt.subplot(2, 3, 5)
-    df_viz['avg_grade'] = df_viz[['G1', 'G2', 'G3']].mean(axis=1)
-    persona_avg_grades = df_viz.groupby('persona')['avg_grade'].mean().sort_values(ascending=False)
-    sns.barplot(x=persona_avg_grades.values, y=persona_avg_grades.index, palette='Set2', ax=ax5)
-    ax5.set_title('Average Grade by Pattern', fontsize=12, fontweight='bold')
-    ax5.set_xlabel('Average Grade (G1, G2, G3)')
-    ax5.set_ylabel('')
-    
-    # 6. Absences by Cluster
-    ax6 = plt.subplot(2, 3, 6)
-    sns.boxplot(data=df_viz, x='persona', y='absences', palette='Set2', ax=ax6)
-    ax6.set_title('Absences by Pattern', fontsize=12, fontweight='bold')
-    ax6.set_xlabel('')
-    ax6.set_ylabel('Absences')
-    ax6.tick_params(axis='x', rotation=45)
-    
-    plt.tight_layout()
-    plt.savefig('cluster_patterns.png', dpi=150, bbox_inches='tight')
-    print("\n✓ Saved visualization: cluster_patterns.png")
-    plt.close()
+    pass
 
 
 # ============================================================================
