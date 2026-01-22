@@ -376,5 +376,5 @@ if __name__ == "__main__":
     # Show sample assignments
     df['cluster'] = labels
     df['persona'] = df['cluster'].map(personas)
-    print("\n📊 Sample student assignments:")
+    print("\nSample student assignments:")
     print(df[['persona', 'engagement_score', 'consistency_index', 'performance_trend', 'participation_stability']].head(10))

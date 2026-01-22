@@ -1,12 +1,12 @@
-# 🎓 Learning Pattern Analysis & Teaching Guidance System
+# Learning Pattern Analysis & Teaching Guidance System
 
-**An interpretable AI system for educators to understand student learning behaviors and provide personalized teaching interventions**
+**An interpretable system for educators to understand student learning behaviors and provide personalized teaching interventions**
 
 Built for the **Education | Behavioral Analytics | Personalization** hackathon theme.
 
 ---
 
-## 🎯 Problem Statement
+## Problem Statement
 
 Students differ widely in how they absorb information, engage in class, and respond to instruction. Teachers rarely have tools that reveal these differences at scale or suggest targeted interventions.
 
@@ -18,14 +18,14 @@ This system enables educators to:
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 ### 1. Pattern Discovery
 - Unsupervised clustering (K-Means) to identify natural learning groupings
 - Automatic optimal cluster determination using Silhouette Score
 - Human-readable personas: *Consistent Achievers*, *At-Risk Learners*, *Emerging Stars*, etc.
 
-### 2. Explainability Layer ⭐
+### 2. Transparent Classification
 - Feature importance calculation for each student
 - Plain English explanations (not just predictions!)
 - "Why does this student belong to this pattern?"
@@ -48,7 +48,7 @@ This system enables educators to:
 
 ---
 
-## 📊 Dataset
+## Dataset
 
 Uses: `student_dataset.csv`
 
@@ -62,7 +62,7 @@ Uses: `student_dataset.csv`
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Python 3.x**
 - **Machine Learning**: scikit-learn (KMeans, StandardScaler)
@@ -73,7 +73,7 @@ Uses: `student_dataset.csv`
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -134,7 +134,7 @@ python teaching_guidance.py
 
 ---
 
-## 🧠 How It Works
+## How It Works
 
 ### 1. Data Processing
 - Load student data
@@ -188,25 +188,25 @@ python teaching_guidance.py
 
 The interactive dashboard includes:
 
-1. **📊 Class Overview**: Pattern distribution, risk metrics, behavioral charts
-2. **👤 Student Profiles**: Individual analysis with explanations and recommendations
-3. **⚠️ Risk Alerts**: Filterable list of students needing intervention
-4. **🎯 Teaching Strategies**: Pattern-specific guidance
-5. **ℹ️ About & Ethics**: System documentation and ethical guidelines
+1. **Class Overview**: Pattern distribution, risk metrics, behavioral charts
+2. **Student Profiles**: Individual analysis with explanations and recommendations
+3. **Risk Alerts**: Filterable list of students needing intervention
+4. **Teaching Strategies**: Pattern-specific guidance
+5. **About & Ethics**: System documentation and ethical guidelines
 
 ---
 
-## ⚖️ Ethical Considerations
+## Ethical Considerations
 
 **This system is designed to ASSIST teacher judgment, not replace it.**
 
-✅ **What We Do:**
+- **What We Do:**
 - Focus on observable behaviors and performance
 - Provide transparent explanations
 - Suggest non-punitive, growth-oriented strategies
 - Treat patterns as dynamic, not permanent labels
 
-❌ **What We Don't Do:**
+- **What We Don't Do:**
 - Use demographic attributes (gender, address, family background) for clustering
 - Make final decisions about students
 - Replace teacher expertise
@@ -216,7 +216,7 @@ The interactive dashboard includes:
 
 ---
 
-## 🎓 Educational Research Basis
+## Educational Research Basis
 
 This system draws on:
 - **Differentiated Instruction** (Tomlinson, 2001)
@@ -227,19 +227,15 @@ This system draws on:
 
 ---
 
-## 🏆 Hackathon Alignment
+## Hackathon Alignment
 
 ### Theme: Education | Behavioral Analytics | Personalization
 
-✅ **Identification of learning tendencies**: Unsupervised clustering discovers 4-6 natural patterns
-
-✅ **Explanation of pattern assignment**: Feature importance + plain English explanations
-
-✅ **Early disengagement signals**: Multi-factor risk detection system
-
-✅ **Teaching strategies aligned to patterns**: Evidence-based recommendations per pattern
-
-✅ **Class & school-level summaries**: Dashboard provides aggregated insights
+- **Identification of learning tendencies**: Unsupervised clustering discovers 4-6 natural patterns
+- **Explanation of pattern assignment**: Feature importance + plain English explanations
+- **Early disengagement signals**: Multi-factor risk detection system
+- **Teaching strategies aligned to patterns**: Evidence-based recommendations per pattern
+- **Class & school-level summaries**: Dashboard provides aggregated insights
 
 ### Evaluation Criteria Met:
 
@@ -260,7 +256,7 @@ This system draws on:
 
 ---
 
-## 📞 Support
+## Support
 
 For questions or issues:
 1. Review the **About & Ethics** section in the dashboard
@@ -275,12 +271,14 @@ Educational use only. Created for hackathon demo purposes.
 
 ---
 
-## 👥 Acknowledgments
+## Acknowledgments
 
-Built with ❤️ for educators who want to better understand and support their students.
+Built for educators who want to better understand and support their students.
 
 **Dataset**: Student Performance Data Set (UCI Machine Learning Repository)
 
 ---
 
-**🎓 Remember**: Every student has potential. This tool helps you discover and nurture it.
+**Remember**: Every student has potential. This tool helps you discover and nurture it.
+
+© 2026 MADTech. All rights reserved.

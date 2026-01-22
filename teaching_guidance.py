@@ -127,7 +127,7 @@ def generate_personalized_recommendations(student_data, persona_name, risk_level
     # Add risk-specific urgent actions
     if risk_level == "High Risk":
         urgent_actions = [
-            "🚨 **URGENT**: Immediate intervention required",
+            "**URGENT**: Immediate intervention required",
             "**Schedule meeting within 48 hours**",
             "**Develop individualized support plan**"
         ]
@@ -135,7 +135,7 @@ def generate_personalized_recommendations(student_data, persona_name, risk_level
     
     elif risk_level == "Watchlist":
         watch_actions = [
-            "⚠️ **MONITOR**: Keep close watch on progress",
+            "**MONITOR**: Keep close watch on progress",
             "**Check in within next week**"
         ]
         recommendations['strategies'] = watch_actions + recommendations['strategies']

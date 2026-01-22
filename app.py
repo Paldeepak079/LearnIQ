@@ -102,19 +102,19 @@ st.markdown("""
         animation: fadeIn 0.8s ease-out;
     }
     
-    /* Enhanced header with premium gradient and sleek design - smaller & higher */
+    /* Updated header style: moved higher and smaller accent line */
     .main-header {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
         font-weight: 900;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         text-align: center;
-        padding: 0.75rem 0 0.25rem 0;
-        margin-bottom: 0.25rem;
-        margin-top: -1rem;
-        letter-spacing: 2px;
+        padding: 0.25rem 0;
+        margin-bottom: 0.1rem;
+        margin-top: -2rem; /* Move up */
+        letter-spacing: 1px;
         text-shadow: none;
         position: relative;
         animation: fadeIn 0.8s ease-out;
@@ -123,10 +123,10 @@ st.markdown("""
     .main-header::after {
         content: '';
         position: absolute;
-        bottom: -5px;
+        bottom: -2px;
         left: 50%;
         transform: translateX(-50%);
-        width: 150px;
+        width: 80px; /* Smaller header line */
         height: 2px;
         background: linear-gradient(90deg, transparent, #667eea, #764ba2, transparent);
         border-radius: 2px;
@@ -473,10 +473,13 @@ def load_and_process_data ():
 
 
 def main():
+    # Logo and Header
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.image("logo.png", width=120)
+    
     st.markdown('<div class="main-header">LearnIQ</div>', 
                 unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; color: #a0a0a0; font-size: 0.85rem; margin-top: -0.25rem; margin-bottom: 1rem;">Learning Pattern Analysis & Teaching Guidance System</p>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; color: #666; font-size: 0.75rem; margin-bottom: 1.5rem;">© 2026 MADTech. All rights reserved.</p>', unsafe_allow_html=True)
     st.markdown("---")
     
     # Load data (hide spinner for cleaner UX)
@@ -511,11 +514,15 @@ def main():
     
     elif page == "About & Ethics":
         show_about_ethics()
+        
+    # Footer
+    st.markdown("---")
+    st.markdown('<p style="text-align: center; color: #666; font-size: 0.8rem; margin-top: 2rem;">© 2026 MADTech. All rights reserved.</p>', unsafe_allow_html=True)
 
 
 def show_class_overview(df, personas):
     """Display class-level overview and statistics."""
-    st.header("📊 Class Overview")
+    st.header("Class Overview")
     
     # Key Metrics
     col1, col2, col3, col4 = st.columns(4)
@@ -653,7 +660,7 @@ def show_class_overview(df, personas):
     
     # Class guidance
     st.markdown("---")
-    st.subheader("📋 Class-Level Guidance")
+    st.subheader("Class-Level Guidance")
     class_guidance = generate_class_guidance(df)
     
     if class_guidance['priorities']:
@@ -661,14 +668,14 @@ def show_class_overview(df, personas):
         for priority in class_guidance['priorities']:
             st.markdown(f"- {priority}")
     
-    with st.expander("📚 Class-Wide Teaching Strategies"):
+    with st.expander("Class-Wide Teaching Strategies"):
         for strategy in class_guidance['classwide_strategies']:
             st.markdown(f"• {strategy}")
 
 
 def show_student_profiles(df):
     """Display individual student profiles with search."""
-    st.header("👤 Student Profiles")
+    st.header("Student Profiles")
     
     # Search/Select student
     st.subheader("Select a Student")
@@ -723,7 +730,7 @@ def show_student_profiles(df):
         st.metric("Average Grade", f"{avg_grade:.1f}/20")
     
     # Behavioral Metrics with Gauge Charts
-    st.subheader("📈 Behavioral Metrics")
+    st.subheader("Behavioral Metrics")
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -793,7 +800,7 @@ def show_student_profiles(df):
         st.plotly_chart(fig_participation, use_container_width=True, config=PLOTLY_CONFIG)
     
     # Radar Chart for Behavioral Profile
-    st.subheader("🎯 Behavioral Profile Radar")
+    st.subheader("Behavioral Profile Radar")
     
     categories = ['Engagement', 'Consistency', 'Participation', 'Study Time', 'Attendance']
     values = [
@@ -832,7 +839,7 @@ def show_student_profiles(df):
     st.plotly_chart(fig_radar, use_container_width=True, config=PLOTLY_CONFIG)
     
     # Progress Chart
-    st.subheader("📊 Grade Progression")
+    st.subheader("Grade Progression")
     grades = [student['G1'], student['G2'], student['G3']]
     quarters = ['Q1', 'Q2', 'Q3']
     
@@ -859,7 +866,7 @@ def show_student_profiles(df):
     st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
     
     # Explanation
-    st.subheader("🧠 Pattern Explanation")
+    st.subheader("Pattern Explanation")
     st.info(student['explanation'])
     
     # Risk Assessment
@@ -1069,9 +1076,9 @@ def show_about_ethics():
        - Emphasize student potential and improvement
     
     4. **Teacher Autonomy**: 
-       - AI provides suggestions, teachers make final decisions
+       - System provides suggestions, teachers make final decisions
        - Use professional judgment to contextualize findings
-       - Consider factors the AI cannot see (student circumstances, recent events, etc.)
+       - Consider factors the system cannot see (student circumstances, recent events, etc.)
     
     5. **Regular Review**: 
        - Patterns should be reassessed periodically
@@ -1086,7 +1093,7 @@ def show_about_ethics():
     
     st.markdown("---")
     
-    st.subheader("🔬 Technical Details")
+    st.subheader("Technical Details")
     st.markdown("""
     **Methodology:**
     - **Clustering Algorithm**: K-Means with optimal k determination via Silhouette Score
@@ -1107,7 +1114,7 @@ def show_about_ethics():
     
     st.markdown("---")
     
-    st.subheader("📞 Feedback & Support")
+    st.subheader("Feedback & Support")
     st.info("""
     This system is designed for educators. Your feedback helps improve it!
     
@@ -1117,7 +1124,7 @@ def show_about_ethics():
     - Share insights on what works in your classroom
     """)
     
-    st.success("✅ **Remember**: You are the expert on your students. Use this tool to enhance, not replace, your professional judgment.")
+    st.success("**Remember**: You are the expert on your students. Use this tool to enhance, not replace, your professional judgment.")
 
 
 if __name__ == "__main__":

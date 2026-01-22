@@ -241,7 +241,7 @@ def analyze_all_students(df):
     
     # Summary statistics
     risk_dist = df_risk['risk_level'].value_counts()
-    print("\n📊 Risk Distribution:")
+    print("\nRisk Distribution:")
     for level in ['Normal', 'Watchlist', 'High Risk']:
         count = risk_dist.get(level, 0)
         pct = (count / len(df_risk)) * 100
