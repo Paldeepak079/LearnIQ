@@ -102,18 +102,38 @@ st.markdown("""
         animation: fadeIn 0.8s ease-out;
     }
     
-    /* Enhanced header with neon glow and animation */
+    /* Enhanced header with premium gradient and sleek design */
     .main-header {
-        font-size: 3rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-size: 3.5rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        background-clip: text;
         text-align: center;
-        padding: 1.5rem 0;
-        margin-bottom: 1rem;
-        filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.5));
-        animation: fadeIn 1s ease-out, float 3s ease-in-out infinite;
+        padding: 2rem 0 0.5rem 0;
+        margin-bottom: 0.5rem;
+        letter-spacing: 2px;
+        text-shadow: none;
+        position: relative;
+        animation: fadeIn 1s ease-out, slideInDown 0.8s ease-out;
+    }
+    
+    .main-header::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 200px;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #667eea, #764ba2, transparent);
+        border-radius: 2px;
+    }
+    
+    @keyframes slideInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     
     /* Metric cards with dark background, neon borders, and animations */
@@ -163,9 +183,58 @@ st.markdown("""
         transition: all 0.3s ease;
     }
     
+    /* Enhanced sidebar radio buttons with premium styling */
+    section[data-testid="stSidebar"] .stRadio > div {
+        gap: 0.75rem;
+    }
+    
+    section[data-testid="stSidebar"] .stRadio label {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border: 2px solid rgba(102, 126, 234, 0.3);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        color: #e0e0e0 !important;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    section[data-testid="stSidebar"] .stRadio label::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.6s;
+    }
+    
     section[data-testid="stSidebar"] .stRadio label:hover {
-        color: #667eea !important;
-        transform: translateX(5px);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.25) 100%);
+        border-color: #667eea;
+        transform: translateX(8px) scale(1.02);
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    section[data-testid="stSidebar"] .stRadio label:hover::before {
+        left: 100%;
+    }
+    
+    /* Selected radio button styling */
+    section[data-testid="stSidebar"] .stRadio label[data-baseweb="radio"] > div:first-child {
+        background-color: #667eea !important;
+        border-color: #667eea !important;
+    }
+    
+    section[data-testid="stSidebar"] .stRadio input:checked + div {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border-color: #667eea !important;
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.6) !important;
     }
     
     /* Dark info boxes with neon borders and animations */
@@ -408,15 +477,14 @@ def load_and_process_data ():
 
 
 def main():
-    # Header
-    st.markdown('<div class="main-header">🎓 LearnIQ</div>', 
+    # Header - Premium sleek design
+    st.markdown('<div class="main-header">LearnIQ</div>', 
                 unsafe_allow_html=True)
-    st.caption("Learning Pattern Analysis & Teaching Guidance System")
+    st.markdown('<p style="text-align: center; color: #a0a0a0; font-size: 0.95rem; margin-top: -0.5rem; margin-bottom: 1.5rem;">Learning Pattern Analysis & Teaching Guidance System</p>', unsafe_allow_html=True)
     st.markdown("---")
     
-    # Load data
-    with st.spinner("Loading student data and analyzing patterns..."):
-        df, personas, cluster_profiles = load_and_process_data()
+    # Load data (hide spinner for cleaner UX)
+    df, personas, cluster_profiles = load_and_process_data()
     
     # Sidebar Navigation
     st.sidebar.markdown('<p style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">📚 Navigation</p>', unsafe_allow_html=True)
