@@ -26,6 +26,8 @@ from pattern_discovery import discover_patterns
 from explainability import generate_student_explanations
 from risk_detection import analyze_all_students
 from teaching_guidance import generate_all_recommendations, generate_class_guidance
+from predictive_analysis import GradePredictor, initialize_predictor
+from reporting import generate_pdf_report
 
 # Plotly chart configuration - Remove modebar and add animations
 PLOTLY_CONFIG = {
@@ -438,10 +440,18 @@ st.markdown("""
 
 
 @st.cache_data
-def load_and_process_data ():
-    """Load and process all student data with caching."""
+def load_and_process_data (uploaded_file=None):
+    """Load and process student data with support for dynamic uploads."""
+    path = 'student_dataset.csv'
+    if uploaded_file is not None:
+        # Save temp file
+        temp_path = "temp_student_data.csv"
+        with open(temp_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        path = temp_path
+        
     # Process data
-    df, X_normalized, scaler, feature_names = process_data()
+    df, X_normalized, scaler, feature_names = process_data(path)
     
     # Discover patterns
     labels, kmeans, personas, cluster_profiles = discover_patterns(
@@ -461,7 +471,7 @@ def load_and_process_data ():
     # Generate recommendations
     df = generate_all_recommendations(df)
     
-    return df, personas, cluster_profiles
+    return df, personas, cluster_profiles, kmeans, feature_names
 
 
 def main():
@@ -470,10 +480,20 @@ def main():
                 unsafe_allow_html=True)
     st.markdown("---")
     
-    # Load data (hide spinner for cleaner UX)
-    df, personas, cluster_profiles = load_and_process_data()
+    # Sidebar Navigation - Data Upload
+    st.sidebar.markdown('<p style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">Data Source</p>', unsafe_allow_html=True)
+    uploaded_file = st.sidebar.file_uploader("Upload Student CSV", type=['csv'])
     
-    # Sidebar Navigation
+    # Load data
+    df, personas, cluster_profiles, kmeans_model, feature_names = load_and_process_data(uploaded_file)
+    
+    # Initialize Predictor
+    @st.cache_resource
+    def get_predictor(_df):
+        return initialize_predictor(_df)
+    predictor = get_predictor(df)
+    
+    st.sidebar.markdown("---")
     st.sidebar.markdown('<p style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Navigation</p>', unsafe_allow_html=True)
     page = st.sidebar.radio(
         "navigation",
@@ -491,7 +511,7 @@ def main():
         show_class_overview(df, personas)
     
     elif page == "Student Profiles":
-        show_student_profiles(df)
+        show_student_profiles(df, predictor)
     
     elif page == "Risk Alerts":
         show_risk_alerts(df)
@@ -645,6 +665,53 @@ def show_class_overview(df, personas):
     
     st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
     
+    # Advanced Behavioral Insights (Sankey Diagram)
+    st.markdown("---")
+    st.subheader("Behavioral Flow Analysis")
+    st.markdown("Visualize the relationship between Study Time, Risk Levels, and Learning Patterns.")
+    
+    def show_behavioral_flow(df):
+        # Prepare Sankey data
+        df_sankey = df.copy()
+        df_sankey['studytime_label'] = df_sankey['studytime'].map({1: 'Little Study', 2: 'Moderate Study', 3: 'High Study', 4: 'Very High Study'})
+        
+        # Link 1: Study Time -> Risk Level
+        flow1 = df_sankey.groupby(['studytime_label', 'risk_level']).size().reset_index(name='value')
+        # Link 2: Risk Level -> Persona
+        flow2 = df_sankey.groupby(['risk_level', 'persona']).size().reset_index(name='value')
+        
+        # Mapping labels to indices
+        all_labels = list(df_sankey['studytime_label'].unique()) + list(df_sankey['risk_level'].unique()) + list(df_sankey['persona'].unique())
+        label_map = {l: i for i, l in enumerate(all_labels)}
+        
+        sources = [label_map[r['studytime_label']] for _, r in flow1.iterrows()] + \
+                  [label_map[r['risk_level']] for _, r in flow2.iterrows()]
+        targets = [label_map[r['risk_level']] for _, r in flow1.iterrows()] + \
+                  [label_map[r['persona']] for _, r in flow2.iterrows()]
+        values = list(flow1['value']) + list(flow2['value'])
+        
+        fig = go.Figure(data=[go.Sankey(
+            node=dict(
+                pad=15,
+                thickness=20,
+                line=dict(color="black", width=0.5),
+                label=all_labels,
+                color="rgba(102, 126, 234, 0.8)"
+            ),
+            link=dict(
+                source=sources,
+                target=targets,
+                value=values,
+                color="rgba(102, 126, 234, 0.2)"
+            )
+        )])
+        
+        fig.update_layout(title_text="Behavior-to-Outcome Flow Path", font_size=12, height=500,
+                         paper_bgcolor='rgba(0,0,0,0)', font_color='#e0e0e0')
+        st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+
+    show_behavioral_flow(df)
+    
     # Class guidance
     st.markdown("---")
     st.subheader("Class-Level Guidance")
@@ -660,7 +727,7 @@ def show_class_overview(df, personas):
             st.markdown(f"• {strategy}")
 
 
-def show_student_profiles(df):
+def show_student_profiles(df, predictor):
     """Display individual student profiles with search."""
     st.header("Student Profiles")
     
@@ -852,8 +919,70 @@ def show_student_profiles(df):
     )
     st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
     
-    # Explanation
-    st.subheader("Pattern Explanation")
+    # PDF Report Export
+    st.markdown("---")
+    col_pdf1, col_pdf2 = st.columns([3, 1])
+    with col_pdf1:
+        st.subheader("Professional Report")
+        st.markdown("Download a comprehensive PDF summary of this student's learning pattern and risk assessment.")
+    with col_pdf2:
+        try:
+            pdf_content = generate_pdf_report(student)
+            st.download_button(
+                label="📄 Download PDF Report",
+                data=pdf_content,
+                file_name=f"LearnIQ_Report_Student_{student.name if hasattr(student, 'name') else student_idx}.pdf",
+                mime="application/pdf"
+            )
+        except Exception as e:
+            st.error(f"Error generating PDF: {e}")
+
+    # Predictive Analysis (What-If)
+    st.markdown("---")
+    st.subheader("G3 Forecast & What-If Analysis")
+    
+    col_pred1, col_pred2 = st.columns([1, 1])
+    
+    with col_pred1:
+        st.markdown("**Current Forecast (Based on G1 & G2)**")
+        prediction, pass_prob = predictor.predict(student)
+        
+        # Display forecast
+        st.markdown(f"### Predicted G3: <span style='color: #667eea;'>{prediction:.1f}/20</span>", unsafe_allow_html=True)
+        
+        status_color = "#00ff88" if pass_prob > 0.7 else ("#ffaa00" if pass_prob > 0.4 else "#ff4444")
+        st.markdown(f"**Pass Probability**: <span style='color: {status_color};'>{pass_prob*100:.0f}%</span>", unsafe_allow_html=True)
+        
+        if prediction < 10:
+            st.error("⚠️ Prediction indicates high academic risk.")
+        elif prediction < 12:
+            st.warning("⚠️ Prediction indicates borderline academic risk.")
+        else:
+            st.success("✅ Prediction indicates student is on track.")
+
+    with col_pred2:
+        st.markdown("**What-If Scenario Simulation**")
+        st.caption("Adjust behavioral factors to see potential impact on final grade.")
+        
+        wi_study = st.slider("Study Time (Intensity)", 1, 4, int(student['studytime']), key=f"wi_study_{student.name if hasattr(student, 'name') else student_idx}")
+        wi_abs = st.slider("Absences (Expected Total)", 0, 30, int(student['absences']), key=f"wi_abs_{student.name if hasattr(student, 'name') else student_idx}")
+        
+        # Create dummy student for what-if
+        wi_student = student.copy()
+        wi_student['studytime'] = wi_study
+        wi_student['absences'] = wi_abs
+        # Re-calc engagement score (simplified delta for intuitive UI)
+        wi_student['engagement_score'] = np.clip(student['engagement_score'] + (wi_study - student['studytime']) * 10 - (wi_abs - student['absences']) * 2, 0, 100)
+        
+        wi_pred, wi_prob = predictor.predict(wi_student)
+        
+        delta = wi_pred - prediction
+        st.metric("Simulated G3 Grade", f"{wi_pred:.1f}", delta=f"{delta:.1f}")
+        st.caption("Note: Simulation assumes other factors remain constant.")
+
+    # Assessment & Recommendations
+    st.markdown("---")
+    st.subheader("Detailed Assessment")
     st.info(student['explanation'])
     
     # Risk Assessment
