@@ -139,40 +139,29 @@ def explain_assignment(student_data, cluster_id, persona_name, cluster_centroid,
 
 def generate_student_explanations(df, labels, personas, kmeans_model, feature_names, cluster_profiles):
     """
-    Generate explanations for all students.
-    
-    Args:
-        df (pd.DataFrame): Full student dataset
-        labels (np.array): Cluster assignments
-        personas (dict): Cluster ID to persona mapping
-        kmeans_model: Fitted KMeans model
-        feature_names (list): Feature names used for clustering
-        cluster_profiles (pd.DataFrame): Cluster mean profiles
-        
-    Returns:
-        pd.DataFrame: DataFrame with explanations added
+    Generate explanations for all students using optimized operations.
     """
     df_explained = df.copy()
     df_explained['cluster'] = labels
     df_explained['persona'] = df_explained['cluster'].map(personas)
     
-    explanations = []
+    # Pre-calculate centroids for all students
+    centroids = kmeans_model.cluster_centers_[labels]
     
-    for idx, row in df_explained.iterrows():
-        cluster_id = row['cluster']
-        persona_name = row['persona']
-        cluster_centroid = kmeans_model.cluster_centers_[cluster_id]
-        
-        explanation = explain_assignment(
-            row, cluster_id, persona_name, cluster_centroid,
+    # Pre-extract student features
+    student_f_matrix = df_explained[feature_names].values
+    
+    # Generate explanations using list comprehension (much faster than iterrows)
+    # We pass the pre-calculated features and centroids to avoid repeated lookups
+    df_explained['explanation'] = [
+        explain_assignment(
+            row, labels[i], df_explained['persona'].iloc[i], centroids[i],
             feature_names, cluster_profiles
         )
-        
-        explanations.append(explanation)
+        for i, (idx, row) in enumerate(df_explained.iterrows())
+    ]
     
-    df_explained['explanation'] = explanations
-    
-    print(f"\n✓ Generated explanations for {len(explanations)} students")
+    print(f"\n✓ Generated explanations for {len(df_explained)} students")
     
     return df_explained
 

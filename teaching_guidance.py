@@ -237,13 +237,7 @@ def format_recommendations_text(recommendations):
 
 def generate_all_recommendations(df):
     """
-    Generate recommendations for all students.
-    
-    Args:
-        df (pd.DataFrame): Student data with patterns, risk, and behavioral features
-        
-    Returns:
-        pd.DataFrame: Data with recommendations added
+    Generate recommendations for all students using optimized operations.
     """
     print("\n" + "="*80)
     print("GENERATING TEACHING GUIDANCE")
@@ -251,21 +245,19 @@ def generate_all_recommendations(df):
     
     df_guide = df.copy()
     
-    recommendations_list = []
-    recommendations_text = []
+    # Use list comprehension for faster generation
+    # persona and risk_level are already in df
+    zipped_recs = [
+        generate_personalized_recommendations(
+            row, 
+            row.get('persona', 'Mixed Pattern Learners'), 
+            row.get('risk_level', 'Normal')
+        )
+        for _, row in df_guide.iterrows()
+    ]
     
-    for idx, row in df_guide.iterrows():
-        persona = row.get('persona', 'Mixed Pattern Learners')
-        risk = row.get('risk_level', 'Normal')
-        
-        recs = generate_personalized_recommendations(row, persona, risk)
-        text = format_recommendations_text(recs)
-        
-        recommendations_list.append(recs)
-        recommendations_text.append(text)
-    
-    df_guide['recommendations'] = recommendations_list
-    df_guide['recommendations_text'] = recommendations_text
+    df_guide['recommendations'] = zipped_recs
+    df_guide['recommendations_text'] = [format_recommendations_text(r) for r in zipped_recs]
     
     print(f"\n✓ Generated recommendations for {len(df_guide)} students")
     

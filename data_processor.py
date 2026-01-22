@@ -176,27 +176,20 @@ def engineer_behavioral_features(df):
     # patterns, while inconsistent students may need intervention.
     # ========================================================================
     
-    def calculate_consistency(row):
-        grades = [row['G1'], row['G2'], row['G3']]
-        mean_grade = np.mean(grades)
-        std_grade = np.std(grades)
-        
-        # Handle edge cases
-        if mean_grade == 0:
-            return 0  # No grades = no consistency
-        if std_grade == 0:
-            return 100  # Perfect consistency
-        
-        # Coefficient of variation
-        cv = std_grade / mean_grade
-        
-        # Normalize to 0-100 scale (invert so high score = high consistency)
-        # Cap CV at 1.0 for normalization
-        consistency = (1 - min(cv, 1.0)) * 100
-        
-        return consistency
+    # Vectorized consistency calculation
+    grades_cols = ['G1', 'G2', 'G3']
+    grade_data = df_eng[grades_cols].values
     
-    df_eng['consistency_index'] = df_eng.apply(calculate_consistency, axis=1)
+    mean_grade = np.mean(grade_data, axis=1)
+    std_grade = np.std(grade_data, axis=1)
+    
+    # Avoid division by zero
+    cv = np.zeros_like(mean_grade)
+    mask = mean_grade > 0
+    cv[mask] = std_grade[mask] / mean_grade[mask]
+    
+    # Invert and normalize (high score = high consistency)
+    df_eng['consistency_index'] = (1 - np.minimum(cv, 1.0)) * 100
     
     # ========================================================================
     # 3. PERFORMANCE TREND (-1 to 1)
@@ -212,30 +205,10 @@ def engineer_behavioral_features(df):
     # often more informative than absolute scores.
     # ========================================================================
     
-    def calculate_trend(row):
-        grades = np.array([row['G1'], row['G2'], row['G3']])
-        time_points = np.array([1, 2, 3])  # Quarter sequence
-        
-        # Calculate slope using simple linear regression formula
-        # slope = covariance(x,y) / variance(x)
-        mean_time = np.mean(time_points)
-        mean_grade = np.mean(grades)
-        
-        numerator = np.sum((time_points - mean_time) * (grades - mean_grade))
-        denominator = np.sum((time_points - mean_time) ** 2)
-        
-        if denominator == 0:
-            return 0
-        
-        slope = numerator / denominator
-        
-        # Normalize to -1 to 1 scale
-        # Assuming maximum realistic change is ±10 points per quarter
-        normalized_slope = np.clip(slope / 10, -1, 1)
-        
-        return normalized_slope
-    
-    df_eng['performance_trend'] = df_eng.apply(calculate_trend, axis=1)
+    # Vectorized trend calculation (slope of 3 points)
+    # For time points [1, 2, 3], slope = (y3 - y1) / 2
+    # Assuming maximum realistic change is ±10 points per quarter
+    df_eng['performance_trend'] = np.clip((df_eng['G3'] - df_eng['G1']) / 20, -1, 1)
     
     # ========================================================================
     # 4. PARTICIPATION STABILITY (0-100)

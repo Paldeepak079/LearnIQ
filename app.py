@@ -57,8 +57,8 @@ st.markdown("""
     }
     
     @keyframes glow {
-        0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); }
-        50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.8); }
+        0%, 100% { box-shadow: 0 0 10px rgba(102, 126, 234, 0.2); }
+        50% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); }
     }
     
     @keyframes slideInLeft {
@@ -81,16 +81,10 @@ st.markdown("""
         100% { background-position: 1000px 0; }
     }
 
-    /* Main dark background with gradient animation */
+    /* Main dark background - simpler for performance */
     .main {
-        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
-        background-size: 200% 200%;
-        animation: gradientShift 15s ease infinite;
-    }
-    
-    @keyframes gradientShift {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
+        background-color: #0a0a0a;
+        background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a0a 100%);
     }
     
     .block-container {
@@ -158,9 +152,8 @@ st.markdown("""
     }
     
     div[data-testid="metric-container"]:hover {
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6);
-        animation: pulse 1.5s ease-in-out infinite;
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
     }
     
     /* Sidebar dark gradient with slide animation */
@@ -245,8 +238,7 @@ st.markdown("""
     }
     
     .stAlert:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 25px rgba(102, 126, 234, 0.4);
+        transform: translateX(3px);
     }
     
     /* Risk level badges with glow and pulse animation */
@@ -473,11 +465,7 @@ def load_and_process_data ():
 
 
 def main():
-    # Logo and Header
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.image("logo.png", width=120)
-    
+    # Header
     st.markdown('<div class="main-header">LearnIQ</div>', 
                 unsafe_allow_html=True)
     st.markdown("---")
@@ -487,7 +475,6 @@ def main():
     
     # Sidebar Navigation
     st.sidebar.markdown('<p style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Navigation</p>', unsafe_allow_html=True)
-    st.sidebar.markdown('<p style="color: #a0a0a0; margin-bottom: 1rem;">Select View:</p>', unsafe_allow_html=True)
     page = st.sidebar.radio(
         "navigation",
         ["Class Overview", "Student Profiles", "Risk Alerts", 

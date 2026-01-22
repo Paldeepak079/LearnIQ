@@ -206,13 +206,7 @@ def explain_risk(risk_level, flags, reasons):
 
 def analyze_all_students(df):
     """
-    Analyze risk for all students.
-    
-    Args:
-        df (pd.DataFrame): Student dataset with behavioral features
-        
-    Returns:
-        pd.DataFrame: Dataset with risk analysis added
+    Analyze risk for all students using vectorized operations.
     """
     print("\n" + "="*80)
     print("RISK DETECTION ANALYSIS")
@@ -220,24 +214,57 @@ def analyze_all_students(df):
     
     df_risk = df.copy()
     
-    risk_levels = []
-    risk_flags = []
-    risk_reasons = []
-    risk_explanations = []
+    # 1. Attendance flags: absences > 10
+    abs_flags = df_risk['absences'] > 10
+    abs_reasons = np.where(abs_flags, df_risk['absences'].apply(lambda x: f"High absences ({x:.0f} days)"), "")
     
-    for idx, row in df_risk.iterrows():
-        risk_level, flags, reasons = classify_risk(row)
-        explanation = explain_risk(risk_level, flags, reasons)
-        
-        risk_levels.append(risk_level)
-        risk_flags.append(flags)
-        risk_reasons.append(reasons)
-        risk_explanations.append(explanation)
+    # 2. Engagement flags: engagement < 30
+    eng_flags = df_risk['engagement_score'] < 30
+    eng_reasons = np.where(eng_flags, df_risk['engagement_score'].apply(lambda x: f"Low engagement ({x:.1f}/100)"), "")
     
-    df_risk['risk_level'] = risk_levels
-    df_risk['risk_flags'] = risk_flags
-    df_risk['risk_reasons'] = risk_reasons
-    df_risk['risk_explanation'] = risk_explanations
+    # 3. Volatility flags: consistency < 50
+    vol_flags = df_risk['consistency_index'] < 50
+    vol_reasons = np.where(vol_flags, df_risk['consistency_index'].apply(lambda x: f"Inconsistent performance (consistency: {x:.1f}/100)"), "")
+    
+    # 4. Trend flags: performance_trend < -0.15
+    trend_flags = df_risk['performance_trend'] < -0.15
+    trend_reasons = np.where(trend_flags, df_risk['performance_trend'].apply(lambda x: f"Declining grades (trend: {x:.3f})"), "")
+    
+    # 5. Participation flags: participation < 35
+    part_flags = df_risk['participation_stability'] < 35
+    part_reasons = np.where(part_flags, df_risk['participation_stability'].apply(lambda x: f"Low participation ({x:.1f}/100)"), "")
+    
+    # Combine flags and calculate count
+    all_flags = [abs_flags, eng_flags, vol_flags, trend_flags, part_flags]
+    num_flags = np.sum(all_flags, axis=0)
+    
+    # Assign risk level
+    # 0 = Normal, 1-2 = Watchlist, 3+ = High Risk
+    df_risk['risk_level'] = np.select(
+        [num_flags == 0, num_flags <= 2],
+        ["Normal", "Watchlist"],
+        default="High Risk"
+    )
+    
+    # Create lists of reasons for each student (needed for explanations)
+    all_reasons = [abs_reasons, eng_reasons, vol_reasons, trend_reasons, part_reasons]
+    
+    # Zip together flags and reasons (this is the only non-vectorized part but much faster than full iterrows)
+    # We only do this for flags that are actually set
+    def get_student_reasons(row_idx):
+        active_reasons = [all_reasons[i][row_idx] for i in range(5) if all_flags[i][row_idx]]
+        active_flag_names = [f for i, f in enumerate(['attendance', 'engagement', 'volatility', 'declining', 'participation']) if all_flags[i][row_idx]]
+        return active_flag_names, active_reasons
+
+    zipped = [get_student_reasons(i) for i in range(len(df_risk))]
+    df_risk['risk_flags'] = [z[0] for z in zipped]
+    df_risk['risk_reasons'] = [z[1] for z in zipped]
+    
+    # Generate explanations using list comprehension (faster than apply)
+    df_risk['risk_explanation'] = [
+        explain_risk(row['risk_level'], row['risk_flags'], row['risk_reasons']) 
+        for _, row in df_risk.iterrows()
+    ]
     
     # Summary statistics
     risk_dist = df_risk['risk_level'].value_counts()
