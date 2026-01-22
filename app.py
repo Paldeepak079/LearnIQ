@@ -435,6 +435,55 @@ st.markdown("""
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .block-container {
+            padding: 1rem !important;
+            border-radius: 0px !important;
+            border: none !important;
+        }
+        .main-header {
+            font-size: 2.5rem !important;
+        }
+        h1, h2, h3 {
+            font-size: 1.5rem !important;
+        }
+        .stMetric {
+            padding: 10px !important;
+        }
+    }
+
+    /* Premium Button Styling */
+    div.stButton > button, div.stDownloadButton > button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border: none !important;
+        padding: 0.6rem 1.5rem !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+        width: 100% !important;
+    }
+    
+    div.stButton > button:hover, div.stDownloadButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+        filter: brightness(1.1) !important;
+    }
+    
+    div.stButton > button:active, div.stDownloadButton > button:active {
+        transform: translateY(0px) !important;
+    }
+
+    /* File Uploader Custom Styling */
+    .stFileUploader section {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 2px dashed rgba(102, 126, 234, 0.3) !important;
+        border-radius: 10px !important;
+        padding: 20px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -475,16 +524,11 @@ def load_and_process_data (uploaded_file=None):
 
 
 def main():
-    # Header
-    st.markdown('<div class="main-header">LearnIQ</div>', 
-                unsafe_allow_html=True)
-    st.markdown("---")
-    
-    # Sidebar Navigation - Data Upload
+    # Sidebar - Data Source First
     st.sidebar.markdown('<p style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">Data Source</p>', unsafe_allow_html=True)
-    uploaded_file = st.sidebar.file_uploader("Upload Student CSV", type=['csv'])
+    uploaded_file = st.sidebar.file_uploader("Upload Student CSV", type=['csv'], label_visibility="collapsed")
     
-    # Load data
+    # Load and process data
     df, personas, cluster_profiles, kmeans_model, feature_names = load_and_process_data(uploaded_file)
     
     # Initialize Predictor
@@ -494,6 +538,8 @@ def main():
     predictor = get_predictor(df)
     
     st.sidebar.markdown("---")
+    
+    # Sidebar Navigation
     st.sidebar.markdown('<p style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Navigation</p>', unsafe_allow_html=True)
     page = st.sidebar.radio(
         "navigation",
@@ -502,9 +548,10 @@ def main():
         label_visibility="collapsed"
     )
     
-    st.sidebar.markdown("---")
-    st.sidebar.info(f"**Total Students**: {len(df)}")
-    st.sidebar.success(f"**Learning Patterns**: {len(personas)}")
+    # Header
+    st.markdown('<div class="main-header">LearnIQ</div>', 
+                unsafe_allow_html=True)
+    st.markdown("---")
     
     # Main content based on selection
     if page == "Class Overview":
