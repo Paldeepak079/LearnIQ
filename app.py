@@ -912,16 +912,20 @@ def show_risk_alerts(df):
     display_df = display_df.round(1)
     display_df = display_df.sort_values('Risk', ascending=False)
     
-    # Color code risk levels
+    # Color code risk levels with dark theme friendly colors
     def highlight_risk(row):
         if row['Risk'] == 'High Risk':
-            return ['background-color: #ffcccc'] * len(row)
+            return ['background-color: rgba(255, 75, 75, 0.15); color: #ff8585; font-weight: 500'] * len(row)
         elif row['Risk'] == 'Watchlist':
-            return ['background-color: #fff4cc'] * len(row)
-        return [''] * len(row)
+            return ['background-color: rgba(255, 165, 0, 0.15); color: #ffc966; font-weight: 500'] * len(row)
+        return ['color: #e0e0e0'] * len(row)
     
     st.dataframe(
-        display_df.style.apply(highlight_risk, axis=1),
+        display_df.style.apply(highlight_risk, axis=1).format({
+            'Engagement': '{:.1f}',
+            'Consistency': '{:.1f}',
+            'Trend': '{:.2f}'
+        }),
         use_container_width=True,
         height=400
     )
