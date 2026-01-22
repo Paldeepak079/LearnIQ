@@ -27,9 +27,16 @@ from explainability import generate_student_explanations
 from risk_detection import analyze_all_students
 from teaching_guidance import generate_all_recommendations, generate_class_guidance
 
+# Plotly chart configuration - Remove modebar and add animations
+PLOTLY_CONFIG = {
+    'displayModeBar': False,  # Remove toolbar/slider
+    'displaylogo': False,
+    'staticPlot': False
+}
+
 # Page configuration
 st.set_page_config(
-    page_title="Learning Pattern Analysis System",
+    page_title="LearnIQ - Learning Pattern Analysis",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -402,8 +409,9 @@ def load_and_process_data ():
 
 def main():
     # Header
-    st.markdown('<div class="main-header">🎓 Learning Pattern Analysis & Teaching Guidance System</div>', 
+    st.markdown('<div class="main-header">🎓 LearnIQ</div>', 
                 unsafe_allow_html=True)
+    st.caption("Learning Pattern Analysis & Teaching Guidance System")
     st.markdown("---")
     
     # Load data
@@ -411,11 +419,13 @@ def main():
         df, personas, cluster_profiles = load_and_process_data()
     
     # Sidebar Navigation
-    st.sidebar.title("📚 Navigation")
+    st.sidebar.markdown('<p style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">📚 Navigation</p>', unsafe_allow_html=True)
+    st.sidebar.markdown('<p style="color: #a0a0a0; margin-bottom: 1rem;">Select View:</p>', unsafe_allow_html=True)
     page = st.sidebar.radio(
-        "Select View:",
+        "navigation",
         ["📊 Class Overview", "👤 Student Profiles", "⚠️ Risk Alerts", 
-         "🎯 Teaching Strategies", "ℹ️ About & Ethics"]
+         "🎯 Teaching Strategies", "ℹ️ About & Ethics"],
+        label_visibility="collapsed"
     )
     
     st.sidebar.markdown("---")
@@ -499,9 +509,10 @@ def show_class_overview(df, personas):
                 bgcolor="#1a1a2e",
                 font_size=14,
                 font_family="Arial"
-            )
+            ),
+            transition_duration=500  # Smooth animation
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
     
     with col2:
         st.subheader("Risk Level Distribution")
@@ -539,9 +550,10 @@ def show_class_overview(df, personas):
                 showgrid=True,
                 gridcolor='rgba(102, 126, 234, 0.1)',
                 color='#e0e0e0'
-            )
+            ),
+            transition_duration=500  # Smooth animation
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
     
     # Pattern characteristics
     st.markdown("---")
@@ -566,10 +578,14 @@ def show_class_overview(df, personas):
         xaxis_title="Learning Pattern",
         yaxis_title="Score (0-100)",
         barmode='group',
-        height=400
+        height=400,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#e0e0e0'),
+        transition_duration=500
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
     
     # Class guidance
     st.markdown("---")
@@ -660,8 +676,8 @@ def show_student_profiles(df):
                        {'range': [70, 100], 'color': "#ccffcc"}],
                    'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 90}}
         ))
-        fig_engagement.update_layout(height=200, margin=dict(l=10, r=10, t=50, b=10))
-        st.plotly_chart(fig_engagement, use_container_width=True)
+        fig_engagement.update_layout(height=200, margin=dict(l=10, r=10, t=50, b=10), transition_duration=500)
+        st.plotly_chart(fig_engagement, use_container_width=True, config=PLOTLY_CONFIG)
     
     with col2:
         fig_consistency = go.Figure(go.Indicator(
@@ -675,8 +691,8 @@ def show_student_profiles(df):
                        {'range': [40, 70], 'color': "#fff4cc"},
                        {'range': [70, 100], 'color': "#ccffcc"}]}
         ))
-        fig_consistency.update_layout(height=200, margin=dict(l=10, r=10, t=50, b=10))
-        st.plotly_chart(fig_consistency, use_container_width=True)
+        fig_consistency.update_layout(height=200, margin=dict(l=10, r=10, t=50, b=10), transition_duration=500)
+        st.plotly_chart(fig_consistency, use_container_width=True, config=PLOTLY_CONFIG)
     
     with col3:
         # Trend as delta indicator
@@ -694,8 +710,8 @@ def show_student_profiles(df):
                        {'range': [40, 60], 'color': "#fff4cc"},
                        {'range': [60, 100], 'color': "#ccffcc"}]}
         ))
-        fig_trend.update_layout(height=200, margin=dict(l=10, r=10, t=50, b=10))
-        st.plotly_chart(fig_trend, use_container_width=True)
+        fig_trend.update_layout(height=200, margin=dict(l=10, r=10, t=50, b=10), transition_duration=500)
+        st.plotly_chart(fig_trend, use_container_width=True, config=PLOTLY_CONFIG)
     
     with col4:
         fig_participation = go.Figure(go.Indicator(
@@ -709,8 +725,8 @@ def show_student_profiles(df):
                        {'range': [40, 70], 'color': "#fff4cc"},
                        {'range': [70, 100], 'color': "#ccffcc"}]}
         ))
-        fig_participation.update_layout(height=200, margin=dict(l=10, r=10, t=50, b=10))
-        st.plotly_chart(fig_participation, use_container_width=True)
+        fig_participation.update_layout(height=200, margin=dict(l=10, r=10, t=50, b=10), transition_duration=500)
+        st.plotly_chart(fig_participation, use_container_width=True, config=PLOTLY_CONFIG)
     
     # Radar Chart for Behavioral Profile
     st.subheader("🎯 Behavioral Profile Radar")
@@ -742,10 +758,14 @@ def show_student_profiles(df):
                 range=[0, 100]
             )),
         showlegend=False,
-        height=400
+        height=400,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#e0e0e0'),
+        transition_duration=500
     )
     
-    st.plotly_chart(fig_radar, use_container_width=True)
+    st.plotly_chart(fig_radar, use_container_width=True, config=PLOTLY_CONFIG)
     
     # Progress Chart
     st.subheader("📊 Grade Progression")
@@ -766,9 +786,13 @@ def show_student_profiles(df):
         yaxis_range=[0, 20],
         height=350,
         plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#e0e0e0'),
+        xaxis=dict(color='#e0e0e0'),
+        yaxis=dict(color='#e0e0e0', gridcolor='rgba(102, 126, 234, 0.1)'),
+        transition_duration=500
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
     
     # Explanation
     st.subheader("🧠 Pattern Explanation")
@@ -924,7 +948,13 @@ def show_teaching_strategies(df, personas):
                 'High Risk': '#d62728'
             }
         )
-        st.plotly_chart(fig, use_container_width=True)
+        fig.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#e0e0e0'),
+            transition_duration=500
+        )
+        st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
     
     # Example students
     st.markdown("---")
