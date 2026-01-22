@@ -924,6 +924,7 @@ def show_risk_alerts(df):
         display_df.style.apply(highlight_risk, axis=1).format({
             'Engagement': '{:.1f}',
             'Consistency': '{:.1f}',
+            'Absences': '{:.0f}',
             'Trend': '{:.2f}'
         }),
         use_container_width=True,
