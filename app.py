@@ -37,7 +37,7 @@ PLOTLY_CONFIG = {
 # Page configuration
 st.set_page_config(
     page_title="LearnIQ - Learning Pattern Analysis",
-    page_icon="🎓",
+    page_icon="📄",  # Simple document icon
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -102,38 +102,34 @@ st.markdown("""
         animation: fadeIn 0.8s ease-out;
     }
     
-    /* Enhanced header with premium gradient and sleek design */
+    /* Enhanced header with premium gradient and sleek design - smaller & higher */
     .main-header {
-        font-size: 3.5rem;
+        font-size: 2.5rem;
         font-weight: 900;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         text-align: center;
-        padding: 2rem 0 0.5rem 0;
-        margin-bottom: 0.5rem;
+        padding: 0.75rem 0 0.25rem 0;
+        margin-bottom: 0.25rem;
+        margin-top: -1rem;
         letter-spacing: 2px;
         text-shadow: none;
         position: relative;
-        animation: fadeIn 1s ease-out, slideInDown 0.8s ease-out;
+        animation: fadeIn 0.8s ease-out;
     }
     
     .main-header::after {
         content: '';
         position: absolute;
-        bottom: -10px;
+        bottom: -5px;
         left: 50%;
         transform: translateX(-50%);
-        width: 200px;
-        height: 3px;
+        width: 150px;
+        height: 2px;
         background: linear-gradient(90deg, transparent, #667eea, #764ba2, transparent);
         border-radius: 2px;
-    }
-    
-    @keyframes slideInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
     
     /* Metric cards with dark background, neon borders, and animations */
@@ -477,22 +473,22 @@ def load_and_process_data ():
 
 
 def main():
-    # Header - Premium sleek design
     st.markdown('<div class="main-header">LearnIQ</div>', 
                 unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; color: #a0a0a0; font-size: 0.95rem; margin-top: -0.5rem; margin-bottom: 1.5rem;">Learning Pattern Analysis & Teaching Guidance System</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; color: #a0a0a0; font-size: 0.85rem; margin-top: -0.25rem; margin-bottom: 1rem;">Learning Pattern Analysis & Teaching Guidance System</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; color: #666; font-size: 0.75rem; margin-bottom: 1.5rem;">© 2026 MADTech. All rights reserved.</p>', unsafe_allow_html=True)
     st.markdown("---")
     
     # Load data (hide spinner for cleaner UX)
     df, personas, cluster_profiles = load_and_process_data()
     
     # Sidebar Navigation
-    st.sidebar.markdown('<p style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">📚 Navigation</p>', unsafe_allow_html=True)
+    st.sidebar.markdown('<p style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Navigation</p>', unsafe_allow_html=True)
     st.sidebar.markdown('<p style="color: #a0a0a0; margin-bottom: 1rem;">Select View:</p>', unsafe_allow_html=True)
     page = st.sidebar.radio(
         "navigation",
-        ["📊 Class Overview", "👤 Student Profiles", "⚠️ Risk Alerts", 
-         "🎯 Teaching Strategies", "ℹ️ About & Ethics"],
+        ["Class Overview", "Student Profiles", "Risk Alerts", 
+         "Teaching Strategies", "About & Ethics"],
         label_visibility="collapsed"
     )
     
@@ -501,19 +497,19 @@ def main():
     st.sidebar.success(f"**Learning Patterns**: {len(personas)}")
     
     # Main content based on selection
-    if page == "📊 Class Overview":
+    if page == "Class Overview":
         show_class_overview(df, personas)
     
-    elif page == "👤 Student Profiles":
+    elif page == "Student Profiles":
         show_student_profiles(df)
     
-    elif page == "⚠️ Risk Alerts":
+    elif page == "Risk Alerts":
         show_risk_alerts(df)
     
-    elif page == "🎯 Teaching Strategies":
+    elif page == "Teaching Strategies":
         show_teaching_strategies(df, personas)
     
-    elif page == "ℹ️ About & Ethics":
+    elif page == "About & Ethics":
         show_about_ethics()
 
 
@@ -1037,16 +1033,16 @@ def show_teaching_strategies(df, personas):
 
 def show_about_ethics():
     """Display information about the system and ethical guidelines."""
-    st.header("ℹ️ About & Ethical Guidelines")
+    st.header("About & Ethical Guidelines")
     
-    st.subheader("📘 About This System")
+    st.subheader("About This System")
     st.markdown("""
-    The **Learning Pattern Analysis & Teaching Guidance System** is an AI-powered tool designed to help 
+    The **Learning Pattern Analysis & Teaching Guidance System** is a machine learning-powered tool designed to help 
     educators understand student learning behaviors and adapt teaching strategies accordingly.
     
     **Key Features:**
     - **Pattern Discovery**: Identifies natural groupings of learning behaviors
-    - **Explainable AI**: Provides clear reasoning for all classifications
+    - **Transparent Classification**: Provides clear reasoning for all classifications
     - **Early Warning System**: Detects signs of disengagement before grades drop
     - **Personalized Guidance**: Suggests evidence-based teaching interventions
     - **Class-Level Insights**: Offers overview of overall class dynamics
@@ -1054,7 +1050,7 @@ def show_about_ethics():
     
     st.markdown("---")
     
-    st.subheader("⚖️ Ethical Use Guidelines")
+    st.subheader("Ethical Use Guidelines")
     st.warning("""
     **IMPORTANT: This system is designed to ASSIST teacher judgment, not replace it.**
     
