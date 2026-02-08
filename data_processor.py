@@ -34,6 +34,10 @@ def load_data(filepath='student_dataset.csv'):
     try:
         df = pd.read_csv(filepath)
         print(f"[OK] Successfully loaded data: {df.shape[0]} students, {df.shape[1]} features")
+        
+        # Adapt dataset to expected format if needed
+        df = adapt_dataset_format(df)
+        
         return df
     except FileNotFoundError:
         print(f"[ERROR] Error: File '{filepath}' not found")
@@ -41,6 +45,96 @@ def load_data(filepath='student_dataset.csv'):
     except Exception as e:
         print(f"[ERROR] Error loading data: {str(e)}")
         raise
+
+
+def adapt_dataset_format(df):
+    """
+    Adapt different dataset formats to the expected column structure.
+    Handles both Portuguese student dataset and generic student datasets.
+    
+    Args:
+        df (pd.DataFrame): Original dataset
+        
+    Returns:
+        pd.DataFrame: Adapted dataset with expected columns
+    """
+    df_adapted = df.copy()
+    
+    # Check if this is the new format (Hours_Studied, Attendance, Exam_Score)
+    if 'Hours_Studied' in df.columns and 'Exam_Score' in df.columns:
+        print("[INFO] Detected new dataset format - adapting columns...")
+        
+        # Map new columns to expected names
+        column_mapping = {
+            'Hours_Studied': 'studytime',
+            'Attendance': 'absences',  # Will invert later
+            'Extracurricular_Activities': 'activities',
+            'Tutoring_Sessions': 'paid',
+            'Parental_Education_Level': 'higher',
+            'School_Type': 'schoolsup',
+            'Parental_Involvement': 'famsup',
+            'Physical_Activity': 'goout',
+            'Sleep_Hours': 'health',
+            'Motivation_Level': 'freetime',
+            'Exam_Score': 'G3',
+            'Previous_Scores': 'G2'
+        }
+        
+        # Rename columns that exist
+        for old_col, new_col in column_mapping.items():
+            if old_col in df_adapted.columns:
+                df_adapted.rename(columns={old_col: new_col}, inplace=True)
+        
+        # Create missing essential columns with synthetic data
+        if 'G1' not in df_adapted.columns and 'G2' in df_adapted.columns:
+            # G1 = G2 with some noise
+            df_adapted['G1'] = df_adapted['G2'] + np.random.normal(0, 2, len(df_adapted))
+            df_adapted['G1'] = np.clip(df_adapted['G1'], 0, 100)
+        
+        # Scale studytime to 1-4 range if needed
+        if df_adapted['studytime'].max() > 4:
+            df_adapted['studytime'] = pd.cut(
+                df_adapted['studytime'], 
+                bins=4, 
+                labels=[1, 2, 3, 4]
+            ).astype(int)
+        
+        # Invert attendance to absences (attendance % -> absence days)
+        if df_adapted['absences'].max() <= 100:  # If it looks like a percentage
+            df_adapted['absences'] = ((100 - df_adapted['absences']) / 100 * 30).round().astype(int)
+        
+        # Convert numeric values to yes/no for binary features
+        for col in ['activities', 'paid', 'higher', 'schoolsup', 'famsup']:
+            if col in df_adapted.columns:
+                if df_adapted[col].dtype in ['int64', 'float64']:
+                    # Assume values > median are 'yes'
+                    median_val = df_adapted[col].median()
+                    df_adapted[col] = df_adapted[col].apply(
+                        lambda x: 'yes' if x > median_val else 'no'
+                    )
+        
+        # Ensure numeric columns are in correct range
+        if 'goout' in df_adapted.columns and df_adapted['goout'].max() > 5:
+            df_adapted['goout'] = pd.cut(df_adapted['goout'], bins=5, labels=[1,2,3,4,5]).astype(int)
+        
+        if 'health' in df_adapted.columns and df_adapted['health'].max() > 5:
+            df_adapted['health'] = pd.cut(df_adapted['health'], bins=5, labels=[1,2,3,4,5]).astype(int)
+        
+        # Add missing columns with default values
+        defaults = {
+            'age': 16,
+            'failures': 0,
+            'Dalc': 1,
+            'Walc': 1
+        }
+        
+        for col, default_val in defaults.items():
+            if col not in df_adapted.columns:
+                df_adapted[col] = default_val
+        
+        print(f"[OK] Adapted {len(column_mapping)} columns to expected format")
+    
+    return df_adapted
 
 
 def handle_missing_values(df):
