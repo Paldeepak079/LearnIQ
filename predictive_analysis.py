@@ -1,94 +1,113 @@
 """
-Predictive Analysis Module for Learning Pattern Analysis System
-
-This module implements:
-1. Training a Random Forest Regressor for grade forecasting
-2. Predicting G3 grades based on behavioral features and G1/G2
-3. Providing "What-If" prediction capabilities
+Predictive Analysis Module for LearnIQ
+Provides grade forecasting using Random Forest Regression
 """
 
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
-import warnings
-warnings.filterwarnings('ignore')
+from sklearn.metrics import mean_absolute_error, r2_score
+
 
 class GradePredictor:
+    """Predicts final grades (G3) based on student behavioral patterns"""
+    
     def __init__(self):
-        self.model = RandomForestRegressor(n_estimators=100, random_state=42)
-        self.feature_names = [
-            'engagement_score', 'consistency_index', 'performance_trend', 
-            'participation_stability', 'studytime', 'failures', 'absences', 
-            'G1', 'G2'
-        ]
-        self.is_trained = False
-
+        self.model = None
+        self.feature_importance = None
+        self.mae = None
+        self.r2 = None
+        
     def train(self, df):
-        """Train the model on the provided dataframe."""
-        X = df[self.feature_names]
-        y = df['G3']
+        """Train the Random Forest model on the dataset"""
+        # Select features for prediction
+        feature_cols = [
+            'age', 'studytime', 'failures', 'absences', 'G1', 'G2',
+            'goout', 'Dalc', 'Walc', 'health', 'freetime'
+        ]
         
-        # Split data for validation
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # Prepare data
+        X = df[feature_cols].copy()
+        y = df['G3'].copy()
         
-        # Fit model
+        # Split data
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
+        
+        # Train model
+        self.model = RandomForestRegressor(
+            n_estimators=100,
+            max_depth=10,
+            random_state=42,
+            n_jobs=-1
+        )
         self.model.fit(X_train, y_train)
         
         # Evaluate
-        predictions = self.model.predict(X_test)
-        mse = mean_squared_error(y_test, predictions)
-        r2 = r2_score(y_test, predictions)
+        y_pred = self.model.predict(X_test)
+        self.mae = mean_absolute_error(y_test, y_pred)
+        self.r2 = r2_score(y_test, y_pred)
         
-        print(f"✓ Trained Grade Predictor model (R²: {r2:.3f}, MSE: {mse:.3f})")
-        self.is_trained = True
-        return r2, mse
-
-    def predict(self, student_features):
-        """
-        Predict G3 grade for a single student profile.
+        # Feature importance
+        self.feature_importance = pd.DataFrame({
+            'feature': feature_cols,
+            'importance': self.model.feature_importances_
+        }).sort_values('importance', ascending=False)
         
-        Args:
-            student_features (dict or pd.Series): Student feature values
-            
-        Returns:
-            float: Predicted G3 grade
-            float: Pass probability (G3 >= 10)
-        """
-        if not self.is_trained:
-            return 0.0, 0.0
-            
-        # Convert to DataFrame for prediction
-        if isinstance(student_features, dict):
-            X = pd.DataFrame([student_features])[self.feature_names]
-        else:
-            X = pd.DataFrame([student_features[self.feature_names].values], columns=self.feature_names)
-            
+        return self.mae, self.r2
+    
+    def predict(self, student_data):
+        """Predict final grade for a student"""
+        if self.model is None:
+            raise ValueError("Model not trained yet!")
+        
+        feature_cols = [
+            'age', 'studytime', 'failures', 'absences', 'G1', 'G2',
+            'goout', 'Dalc', 'Walc', 'health', 'freetime'
+        ]
+        
+        X = student_data[feature_cols].values.reshape(1, -1)
         prediction = self.model.predict(X)[0]
         
-        # Estimate pass probability based on nearby ensemble predictions (simplification)
-        # In a real scenario, we might use a separate classifier or quantiles
-        pass_prob = 1.0 if prediction >= 12 else (0.8 if prediction >= 10 else 0.3)
+        # Calculate confidence interval (simplified)
+        predictions = [tree.predict(X)[0] for tree in self.model.estimators_]
+        std = np.std(predictions)
         
-        return prediction, pass_prob
-
-def initialize_predictor(df):
-    """Factory function to create and train a predictor."""
-    predictor = GradePredictor()
-    predictor.train(df)
-    return predictor
-
-if __name__ == "__main__":
-    # Test the predictor
-    from data_processor import process_data
-    df, _, _, _ = process_data()
-    predictor = initialize_predictor(df)
+        return {
+            'predicted_grade': round(prediction, 2),
+            'confidence_lower': round(max(0, prediction - std), 2),
+            'confidence_upper': round(min(20, prediction + std), 2),
+            'pass_probability': self._calculate_pass_prob(prediction, std)
+        }
     
-    # Test on a sample student
-    sample = df.iloc[0]
-    pred, prob = predictor.predict(sample)
-    print(f"\nSample Prediction:")
-    print(f"  Actual G3: {sample['G3']}")
-    print(f"  Predicted G3: {pred:.1f}")
-    print(f"  Pass Probability: {prob*100:.1f}%")
+    def _calculate_pass_prob(self, mean, std):
+        """Calculate probability of passing (G3 >= 10)"""
+        from scipy.stats import norm
+        z_score = (10 - mean) / (std + 0.01)  # Avoid division by zero
+        prob = 1 - norm.cdf(z_score)
+        return round(prob * 100, 1)
+    
+    def what_if_analysis(self, student_data, variable, new_value):
+        """
+        Simulate what happens if we change a behavioral variable
+        
+        Args:
+            student_data: Current student data
+            variable: Variable to change (e.g., 'studytime', 'absences')
+            new_value: New value for the variable
+        """
+        modified_data = student_data.copy()
+        modified_data[variable] = new_value
+        
+        original_pred = self.predict(student_data)
+        modified_pred = self.predict(modified_data)
+        
+        return {
+            'original': original_pred['predicted_grade'],
+            'modified': modified_pred['predicted_grade'],
+            'change': round(modified_pred['predicted_grade'] - original_pred['predicted_grade'], 2),
+            'variable': variable,
+            'new_value': new_value
+        }

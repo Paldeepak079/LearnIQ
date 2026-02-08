@@ -26,8 +26,9 @@ from pattern_discovery import discover_patterns
 from explainability import generate_student_explanations
 from risk_detection import analyze_all_students
 from teaching_guidance import generate_all_recommendations, generate_class_guidance
-from predictive_analysis import GradePredictor, initialize_predictor
-from reporting import generate_pdf_report
+from predictive_analysis import GradePredictor
+from pdf_generator import generate_student_report
+from sankey_diagram import create_behavioral_sankey, create_risk_flow_sankey
 
 # Plotly chart configuration - Remove modebar and add animations
 PLOTLY_CONFIG = {
@@ -534,7 +535,10 @@ def main():
     # Initialize Predictor
     @st.cache_resource
     def get_predictor(_df):
-        return initialize_predictor(_df)
+        predictor = GradePredictor()
+        predictor.train(_df)
+        return predictor
+    
     predictor = get_predictor(df)
     
     st.sidebar.markdown("---")
@@ -544,7 +548,7 @@ def main():
     page = st.sidebar.radio(
         "navigation",
         ["Class Overview", "Student Profiles", "Risk Alerts", 
-         "Teaching Strategies", "About & Ethics"],
+         "Teaching Strategies", "Behavioral Insights", "About & Ethics"],
         label_visibility="collapsed"
     )
     
@@ -565,6 +569,9 @@ def main():
     
     elif page == "Teaching Strategies":
         show_teaching_strategies(df, personas)
+    
+    elif page == "Behavioral Insights":
+        show_behavioral_insights(df)
     
     elif page == "About & Ethics":
         show_about_ethics()
@@ -974,7 +981,25 @@ def show_student_profiles(df, predictor):
         st.markdown("Download a comprehensive PDF summary of this student's learning pattern and risk assessment.")
     with col_pdf2:
         try:
-            pdf_content = generate_pdf_report(student)
+            # Prepare pattern info for PDF
+            pattern_info = {
+                'pattern': student['persona'],
+                'risk_level': student['risk_level'],
+                'explanation': student['explanation'],
+                'engagement_score': student['engagement_score'],
+                'consistency_index': student['consistency_index'],
+                'performance_trend': student['performance_trend'],
+                'recommendations': student['recommendations_text'].split('\n')
+            }
+            
+            # Get prediction if available
+            try:
+                pred_result = predictor.predict(student)
+                prediction_info = pred_result
+            except:
+                prediction_info = None
+            
+            pdf_content = generate_student_report(student, pattern_info, prediction_info)
             st.download_button(
                 label="📄 Download PDF Report",
                 data=pdf_content,
@@ -992,20 +1017,28 @@ def show_student_profiles(df, predictor):
     
     with col_pred1:
         st.markdown("**Current Forecast (Based on G1 & G2)**")
-        prediction, pass_prob = predictor.predict(student)
-        
-        # Display forecast
-        st.markdown(f"### Predicted G3: <span style='color: #667eea;'>{prediction:.1f}/20</span>", unsafe_allow_html=True)
-        
-        status_color = "#00ff88" if pass_prob > 0.7 else ("#ffaa00" if pass_prob > 0.4 else "#ff4444")
-        st.markdown(f"**Pass Probability**: <span style='color: {status_color};'>{pass_prob*100:.0f}%</span>", unsafe_allow_html=True)
-        
-        if prediction < 10:
-            st.error("⚠️ Prediction indicates high academic risk.")
-        elif prediction < 12:
-            st.warning("⚠️ Prediction indicates borderline academic risk.")
-        else:
-            st.success("✅ Prediction indicates student is on track.")
+        try:
+            pred_result = predictor.predict(student)
+            prediction = pred_result['predicted_grade']
+            pass_prob = pred_result['pass_probability'] / 100  # Convert from percentage
+            conf_lower = pred_result['confidence_lower']
+            conf_upper = pred_result['confidence_upper']
+            
+            # Display forecast
+            st.markdown(f"### Predicted G3: <span style='color: #667eea;'>{prediction:.1f}/20</span>", unsafe_allow_html=True)
+            st.caption(f"Confidence Range: {conf_lower:.1f} - {conf_upper:.1f}")
+            
+            status_color = "#00ff88" if pass_prob > 0.7 else ("#ffaa00" if pass_prob > 0.4 else "#ff4444")
+            st.markdown(f"**Pass Probability**: <span style='color: {status_color};'>{pass_prob*100:.0f}%</span>", unsafe_allow_html=True)
+            
+            if prediction < 10:
+                st.error("⚠️ Prediction indicates high academic risk.")
+            elif prediction < 12:
+                st.warning("⚠️ Prediction indicates borderline academic risk.")
+            else:
+                st.success("✅ Prediction indicates student is on track.")
+        except Exception as e:
+            st.error(f"Prediction error: {e}")
 
     with col_pred2:
         st.markdown("**What-If Scenario Simulation**")
@@ -1018,14 +1051,16 @@ def show_student_profiles(df, predictor):
         wi_student = student.copy()
         wi_student['studytime'] = wi_study
         wi_student['absences'] = wi_abs
-        # Re-calc engagement score (simplified delta for intuitive UI)
-        wi_student['engagement_score'] = np.clip(student['engagement_score'] + (wi_study - student['studytime']) * 10 - (wi_abs - student['absences']) * 2, 0, 100)
         
-        wi_pred, wi_prob = predictor.predict(wi_student)
-        
-        delta = wi_pred - prediction
-        st.metric("Simulated G3 Grade", f"{wi_pred:.1f}", delta=f"{delta:.1f}")
-        st.caption("Note: Simulation assumes other factors remain constant.")
+        try:
+            wi_result = predictor.predict(wi_student)
+            wi_pred = wi_result['predicted_grade']
+            
+            delta = wi_pred - prediction
+            st.metric("Simulated G3 Grade", f"{wi_pred:.1f}", delta=f"{delta:.1f}")
+            st.caption("Note: Simulation assumes other factors remain constant.")
+        except Exception as e:
+            st.error(f"Simulation error: {e}")
 
     # Assessment & Recommendations
     st.markdown("---")
@@ -1204,6 +1239,120 @@ def show_teaching_strategies(df, personas):
             student = df.loc[idx]
             with st.expander(f"Student {idx} - {student['risk_level']}"):
                 st.markdown(student['recommendations_text'])
+
+def show_behavioral_insights(df):
+    """Display advanced behavioral flow analysis with Sankey diagrams."""
+    st.header("🧠 Behavioral Insights")
+    st.markdown("Explore how student behaviors flow into academic outcomes through interactive Sankey diagrams.")
+    
+    st.markdown("---")
+    
+    # Tab selection for different views
+    tab1, tab2 = st.tabs(["💫 Study Habits Flow", "🎯 Pattern-to-Outcome Flow"])
+    
+    with tab1:
+        st.subheader("Study Habits → Attendance → Performance Flow")
+        st.markdown("""
+        This diagram visualizes how study time influences attendance patterns, 
+        which in turn affect final performance. Wider flows indicate more students following that path.
+        """)
+        
+        try:
+            fig = create_behavioral_sankey(df)
+            st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+            
+            # Key insights
+            st.info("""
+            **💡 Key Insights:**
+            - **Green flows**: Positive behaviors leading to good outcomes
+            - **Orange flows**: Mixed behaviors requiring attention  
+            - **Red flows**: Concerning patterns needing intervention
+            """)
+        except Exception as e:
+            st.error(f"Error creating behavioral flow diagram: {e}")
+    
+    with tab2:
+        st.subheader("Learning Pattern → Risk Level → Academic Outcome")
+        st.markdown("""
+        This diagram shows how different learning patterns correlate with risk levels 
+        and ultimately impact academic performance.
+        """)
+        
+        try:
+            fig = create_risk_flow_sankey(df, 'persona', 'risk_level')
+            st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+            
+            # Pattern distribution insights
+            st.markdown("### 📊 Pattern Distribution")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                high_risk_count = len(df[df['risk_level'] == 'High Risk'])
+                st.metric("High Risk Students", high_risk_count, 
+                         delta=f"{(high_risk_count/len(df)*100):.1f}% of class")
+            
+            with col2:
+                watchlist_count = len(df[df['risk_level'] == 'Watchlist'])
+                st.metric("Watchlist Students", watchlist_count,
+                         delta=f"{(watchlist_count/len(df)*100):.1f}% of class")
+            
+            with col3:
+                normal_count = len(df[df['risk_level'] == 'Normal'])
+                st.metric("Performing Well", normal_count,
+                         delta=f"{(normal_count/len(df)*100):.1f}% of class")
+        
+        except Exception as e:
+            st.error(f"Error creating pattern flow diagram: {e}")
+    
+    st.markdown("---")
+    
+    # Additional behavioral correlations
+    st.subheader("📈 Behavioral Correlations")
+    st.markdown("Understand which behaviors have the strongest impact on student success.")
+    
+    import plotly.figure_factory as ff
+    
+    # Create correlation heatmap
+    corr_features = ['studytime', 'absences', 'engagement_score', 
+                     'consistency_index', 'performance_trend', 'G3']
+    corr_labels = ['Study Time', 'Absences', 'Engagement', 
+                   'Consistency', 'Trend', 'Final Grade']
+    
+    corr_matrix = df[corr_features].corr()
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=corr_matrix.values,
+        x=corr_labels,
+        y=corr_labels,
+        colorscale='RdBu_r',
+        zmid=0,
+        text=corr_matrix.values.round(2),
+        texttemplate='%{text}',
+        textfont={"size": 12},
+        colorbar=dict(title="Correlation")
+    ))
+    
+    fig.update_layout(
+        title="Behavioral Feature Correlations",
+        height=500,
+        xaxis=dict(color='#e0e0e0'),
+        yaxis=dict(color='#e0e0e0'),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#e0e0e0')
+    )
+    
+    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+    
+    st.info("""
+    **🔍 How to read this:**
+    - **Strong positive correlation** (dark blue): As one increases, the other increases
+    - **Strong negative correlation** (dark red): As one increases, the other decreases
+    - **Weak correlation** (white): Little to no relationship  
+    
+    **Actionable Finding**: Focus interventions on the features most strongly correlated with Final Grade (G3).
+    """)
+
 
 
 def show_about_ethics():
