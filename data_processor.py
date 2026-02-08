@@ -33,13 +33,13 @@ def load_data(filepath='student_dataset.csv'):
     """
     try:
         df = pd.read_csv(filepath)
-        print(f"✓ Successfully loaded data: {df.shape[0]} students, {df.shape[1]} features")
+        print(f"[OK] Successfully loaded data: {df.shape[0]} students, {df.shape[1]} features")
         return df
     except FileNotFoundError:
-        print(f"✗ Error: File '{filepath}' not found")
+        print(f"[ERROR] Error: File '{filepath}' not found")
         raise
     except Exception as e:
-        print(f"✗ Error loading data: {str(e)}")
+        print(f"[ERROR] Error loading data: {str(e)}")
         raise
 
 
@@ -74,7 +74,7 @@ def handle_missing_values(df):
         df_clean[categorical_cols] = categorical_imputer.fit_transform(df_clean[categorical_cols])
     
     missing_count = df_clean.isnull().sum().sum()
-    print(f"✓ Missing values handled: {missing_count} remaining")
+    print(f"[OK] Missing values handled: {missing_count} remaining")
     
     return df_clean
 
@@ -105,7 +105,7 @@ def normalize_features(df, features_to_normalize=None):
     scaler = StandardScaler()
     df_normalized[features_to_normalize] = scaler.fit_transform(df[features_to_normalize])
     
-    print(f"✓ Normalized {len(features_to_normalize)} features")
+    print(f"[OK] Normalized {len(features_to_normalize)} features")
     
     return df_normalized, scaler
 
@@ -243,11 +243,11 @@ def engineer_behavioral_features(df):
     # ========================================================================
     # Summary Statistics
     # ========================================================================
-    print("\n✓ Engineered Behavioral Features:")
-    print(f"  • Engagement Score: {df_eng['engagement_score'].mean():.1f} (avg)")
-    print(f"  • Consistency Index: {df_eng['consistency_index'].mean():.1f} (avg)")
-    print(f"  • Performance Trend: {df_eng['performance_trend'].mean():.3f} (avg)")
-    print(f"  • Participation Stability: {df_eng['participation_stability'].mean():.1f} (avg)")
+    print("\n[OK] Engineered Behavioral Features:")
+    print(f"  - Engagement Score: {df_eng['engagement_score'].mean():.1f} (avg)")
+    print(f"  - Consistency Index: {df_eng['consistency_index'].mean():.1f} (avg)")
+    print(f"  - Performance Trend: {df_eng['performance_trend'].mean():.3f} (avg)")
+    print(f"  - Participation Stability: {df_eng['participation_stability'].mean():.1f} (avg)")
     
     return df_eng
 
@@ -282,7 +282,7 @@ def prepare_clustering_features(df):
     
     X = df[available_features].copy()
     
-    print(f"\n✓ Prepared {len(available_features)} features for clustering")
+    print(f"\n[OK] Prepared {len(available_features)} features for clustering")
     
     return X, available_features
 
@@ -328,7 +328,7 @@ def process_data(filepath='student_dataset.csv'):
     X_normalized, scaler = normalize_features(X, feature_names)
     
     print("\n" + "="*80)
-    print("✓ DATA PROCESSING COMPLETE")
+    print("[OK] DATA PROCESSING COMPLETE")
     print("="*80)
     
     return df, X_normalized, scaler, feature_names
@@ -337,5 +337,5 @@ def process_data(filepath='student_dataset.csv'):
 if __name__ == "__main__":
     # Test the pipeline
     df, X_normalized, scaler, feature_names = process_data()
-    print("\n📊 Sample processed data:")
+    print("\n[DATA] Sample processed data:")
     print(df[['engagement_score', 'consistency_index', 'performance_trend', 'participation_stability']].head())
